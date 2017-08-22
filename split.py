@@ -38,16 +38,16 @@ def getThreeDigit(num):
 
 def main(comicdir, mode, page_count):
     """入口函数"""
-    (head,comicname) = os.path.split(comicdir)
+    (head, comicname) = os.path.split(comicdir)
     new_root = comicname + '_split'
-    if not os.path.exists('%s\%s' % (head,new_root)):
-        os.mkdir('%s\%s' % (head,new_root))
+    if not os.path.exists('%s\%s' % (head, new_root)):
+        os.mkdir('%s\%s' % (head, new_root))
     
     #创建文件夹结构
     for _,subdirs,_ in os.walk(comicdir):
         for subdir in subdirs:
-            if not os.path.exists('%s\%s\%s' % (head,new_root,subdir)):
-                os.mkdir('%s\%s\%s' % (head,new_root,subdir))
+            if not os.path.exists('%s\%s\%s' % (head,new_root, subdir)):
+                os.mkdir('%s\%s\%s' % (head,new_root, subdir))
     
     # 处理图片并保存到之前创建的文件夹结构
     types = ('*.jpg', '*.png',) # 支持的文件类型,可添加
@@ -105,14 +105,14 @@ def main(comicdir, mode, page_count):
             right_image_box = (int(width/2), 0, width, height)
             left_image = image.crop(left_image_box)
             right_image = image.crop(right_image_box)
-            left_image.convert('RGB').save(save_left_dir,'jpeg')
-            right_image.convert('RGB').save(save_right_dir,'jpeg')
-        else:  # 直接保存进新的路径即可
+            left_image.save(save_left_dir)
+            right_image.save(save_right_dir)
+        else:
             save_dir = pic.replace(comicname, new_root, 1)
-            image.convert('RGB').save(save_dir,'jpeg')
+            image.save(save_dir)
         num_split += 1
         if not num_split % 100:
-            print('Pages Split: %s/%s' % (num_split,num_all))
+            print('Pages Split: %s/%s' % (num_split, num_all))
         
     
 if __name__ == '__main__':

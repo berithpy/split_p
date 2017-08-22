@@ -10,7 +10,4 @@ $ split.py path_to_manga
 Assuming the original path to the manga is `~/Documents/manga`, then the split manga will be created in `~/Documents/manga_split` 
 
 ### Requirements
-[PIL][1] (Python 2) or [Pillow][2] (Python 3)
-
-[1]: http://www.pythonware.com/products/pil/
-[2]: https://pypi.python.org/pypi/Pillow/4.2.1
+[Pillow](https://pypi.python.org/pypi/Pillow/4.2.1)
