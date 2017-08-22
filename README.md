@@ -7,7 +7,7 @@ Downloaded manga sometimes contains two pages in one image. This tool separates 
 $ split.py path_to_manga
 ```
 
-Assuming the original path to the manga is `~/Documents/manga`, then the split manga will be created in `~/Documents/manga_splitted` 
+Assuming the original path to the manga is `~/Documents/manga`, then the split manga will be created in `~/Documents/manga_split` 
 
 ### Requirements
 [PIL][1] (Python 2) or [Pillow][2] (Python 3)

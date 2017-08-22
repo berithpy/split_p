@@ -20,10 +20,6 @@ from glob import glob
 
 from PIL import Image, ImageFile
 
-global RIGHT2LEFT, LEFT2RIGHT   # 定义页面排版顺序,先左后右或先右后左
-RIGHT2LEFT = 1
-LEFT2RIGHT = 2
-
 
 def getThreeDigit(num):
     #将漫画的页码规范为3位数显示，返回字符串，比'1'->'001','21'->'021'zz
@@ -40,10 +36,10 @@ def getThreeDigit(num):
             return False
 
 
-def main(comicdir, mode=RIGHT2LEFT):
+def main(comicdir, mode, page_count):
     """入口函数"""
     (head,comicname) = os.path.split(comicdir)
-    new_root = comicname + '_splitted'
+    new_root = comicname + '_split'
     if not os.path.exists('%s\%s' % (head,new_root)):
         os.mkdir('%s\%s' % (head,new_root))
     
@@ -64,7 +60,7 @@ def main(comicdir, mode=RIGHT2LEFT):
         pics.extend(glob(r'%s\*\%s' % (comicdir, type)))
         
     num_all = len(pics)
-    num_splitted = 0
+    num_split = 0
 
     for pic in pics:
         """ 找出图片的数字序号 """
@@ -85,12 +81,20 @@ def main(comicdir, mode=RIGHT2LEFT):
             start = number.start()
             end = number.end()
             
-            if mode == RIGHT2LEFT:
-                p_ID_left = str(getThreeDigit(int(p_ID)*2))
-                p_ID_right = str(getThreeDigit(int(p_ID)*2-1))
-            else:
-                p_ID_left = str(getThreeDigit(int(p_ID)*2-1))
-                p_ID_right = str(getThreeDigit(int(p_ID)*2))
+            if page_count == 'absolute':
+                if mode == 'RTL':
+                    p_ID_left = str(getThreeDigit(int(p_ID)*2))
+                    p_ID_right = str(getThreeDigit(int(p_ID)*2-1))
+                elif mode == 'LTR':
+                    p_ID_left = str(getThreeDigit(int(p_ID)*2-1))
+                    p_ID_right = str(getThreeDigit(int(p_ID)*2))
+            elif page_count == 'relative':
+                if mode == 'RTL':
+                    p_ID_left = str(getThreeDigit(int(p_ID)+1))
+                    p_ID_right = str(getThreeDigit(int(p_ID)))
+                elif mode == 'LTR':
+                    p_ID_left = str(getThreeDigit(int(p_ID)))
+                    p_ID_right = str(getThreeDigit(int(p_ID)+1))
                 
             save_left_dir = pic[:start] + p_ID_left + pic[end:]
             save_right_dir = pic[:start] + p_ID_right + pic[end:]
@@ -106,20 +110,29 @@ def main(comicdir, mode=RIGHT2LEFT):
         else:  # 直接保存进新的路径即可
             save_dir = pic.replace(comicname, new_root, 1)
             image.convert('RGB').save(save_dir,'jpeg')
-        num_splitted += 1
-        if not num_splitted % 100:
-            print('Progress %s/%s' % (num_splitted,num_all))
+        num_split += 1
+        if not num_split % 100:
+            print('Pages Split: %s/%s' % (num_split,num_all))
         
     
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 4:
         comicdir = sys.argv[1]
+        mode = sys.argv[2]
+        page_count = sys.argv[3]
+    elif len(sys.argv) == 3:
+        comicdir = sys.argv[1]
+        mode = sys.argv[2]
+        page_count = 'absolute'
+    elif len(sys.argv) == 2:
+        comicdir = sys.argv[1]
+        mode = 'RTL'
+        page_count = 'absolute'
     elif len(sys.argv) == 1:
-        print("You should provide manga path as an argument.\ne.g. split.py ~/Documents/manga")
+        print("You need to provide the manga path as an argument.\ne.g. split.py ~/Documents/manga")
         exit(0)
     else:
-        print("too many arguments.")
+        print("Too many arguments.")
         exit(0)
 
-    mode = RIGHT2LEFT
-    main(comicdir, mode)
+    main(comicdir, mode, page_count)
