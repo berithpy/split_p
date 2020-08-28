@@ -22,11 +22,11 @@ from PIL import Image, ImageFile
 
 
 def getThreeDigit(num):
-    #将漫画的页码规范为3位数显示，返回字符串，比'1'->'001','21'->'021'zz
+    # 将漫画的页码规范为3位数显示，返回字符串，比'1'->'001','21'->'021'zz
     if len(str(num)) >= 3:
         return str(num)
     else:
-        if num < 10: 
+        if num < 10:
             return '00' + str(num)
         elif num > 9 and num < 100:
             return '0' + str(num)
@@ -38,30 +38,51 @@ def getThreeDigit(num):
 
 def main(comicdir, mode, page_count):
     """入口函数"""
-    (head, comicname) = os.path.split(comicdir)
+    print(f'Scanning {comicdir}')
+    if sys.platform == "linux":
+        if(comicdir[0] != '/'):
+            print("Use absolute paths on linux")
+            return
+        complete_path = comicdir.split(os.sep)
+        comicname = complete_path[-2]
+        head = f'{os.sep}'.join(complete_path[0:-2])
+    else:
+        (head, comicname) = os.path.split(comicdir)
     new_root = comicname + '_split'
-    if not os.path.exists('%s\%s' % (head, new_root)):
-        os.mkdir('%s\%s' % (head, new_root))
-    
-    #创建文件夹结构
-    for _,subdirs,_ in os.walk(comicdir):
+    if(comicname == ''):
+        print('There was an issue getting the comicname')
+        return
+
+    new_path = f'{os.sep}'.join([head, new_root])
+    if not os.path.exists(new_path):
+        print(f'Creating {new_path}')
+        os.mkdir(new_path)
+
+    # 创建文件夹结构
+    for _, subdirs, _ in os.walk(comicdir):
         for subdir in subdirs:
-            if not os.path.exists('%s\%s\%s' % (head,new_root, subdir)):
-                os.mkdir('%s\%s\%s' % (head,new_root, subdir))
-    
+            new_path_subdir = f'{os.sep}'.join([head, new_root, subdir])
+            if not os.path.exists(new_path_subdir):
+                os.mkdir(new_path_subdir)
+
     # 处理图片并保存到之前创建的文件夹结构
-    types = ('*.jpg', '*.png',) # 支持的文件类型,可添加
+    types = ('*.jpg', '*.png',)  # 支持的文件类型,可添加
     pics = []
-    
+
+    # Not sure if its needed on linux though
     # glob会将[..]认为是匹配方括号中出现的字符,所以需要改为'['->'[[]',']'->'[]]'
-    comicdir = re.sub(r'(?P<squarebracket>\[|\])', '[\g<squarebracket>]', comicdir)
-    for type in types:
-        pics.extend(glob(r'%s\%s' % (comicdir, type)))  # 不再使用生成器,直接用List
-        pics.extend(glob(r'%s\*\%s' % (comicdir, type)))
-        
+    comicdir = re.sub(
+        r'(?P<squarebracket>\[|\])', r'[\g<squarebracket>]', comicdir)
+    for ptype in types:
+        # 不再使用生成器,直接用List
+        pics.extend(glob(f'{os.sep}'.join([comicdir, ptype])))
+        pics.extend(glob(f'{os.sep}'.join([comicdir, '*', ptype])))
+
     num_all = len(pics)
+    print(f'Found {num_all} pictures')
     num_split = 0
 
+    print(f'Starting split')
     for pic in pics:
         """ 找出图片的数字序号 """
         # from http://stackoverflow.com/questions/12984426/python-pil-ioerror-image-file-truncated-with-big-images
@@ -74,13 +95,14 @@ def main(comicdir, mode, page_count):
         size = image.size   # size = (width,height)
         width = size[0]
         height = size[1]
-        
+
         if width > height:  # do split
-            number = list(re.finditer(r"\d+", pic))[-1]  # match last occurence of \d+
+            # match last occurence of \d+
+            number = list(re.finditer(r"\d+", pic))[-1]
             p_ID = number.group()
             start = number.start()
             end = number.end()
-            
+
             if page_count == 'absolute':
                 if mode == 'RTL':
                     p_ID_left = str(getThreeDigit(int(p_ID)*2))
@@ -95,12 +117,12 @@ def main(comicdir, mode, page_count):
                 elif mode == 'LTR':
                     p_ID_left = str(getThreeDigit(int(p_ID)))
                     p_ID_right = str(getThreeDigit(int(p_ID)+1))
-                
+
             save_left_dir = pic[:start] + p_ID_left + pic[end:]
             save_right_dir = pic[:start] + p_ID_right + pic[end:]
             save_left_dir = save_left_dir.replace(comicname, new_root, 1)
             save_right_dir = save_right_dir.replace(comicname, new_root, 1)
-            
+
             left_image_box = (0, 0, int(width/2), height)
             right_image_box = (int(width/2), 0, width, height)
             left_image = image.crop(left_image_box)
@@ -112,9 +134,10 @@ def main(comicdir, mode, page_count):
             image.save(save_dir)
         num_split += 1
         if not num_split % 100:
-            print('Pages Split: %s/%s' % (num_split, num_all))
-        
-    
+            print(f'Pages Split: {num_split}/{num_all}')
+    print(f'All done {num_split}/{num_all} ')
+
+
 if __name__ == '__main__':
     if len(sys.argv) == 4:
         comicdir = sys.argv[1]
