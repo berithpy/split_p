@@ -13,3 +13,8 @@ Assuming the original path to the manga is `~/Documents/manga`, then the split m
 ### Requirements
 
 [Pillow](https://pypi.python.org/pypi/Pillow/4.2.1)
+
+### TODO
+
+- Automatically recognize the full path of the folder
+- Test on windows
